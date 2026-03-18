@@ -2,10 +2,8 @@ import w2v from 'word2vec';
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
-import { fileURLToPath } from 'url';
-
-const corpusPath = fileURLToPath(new URL('../corpus.txt', import.meta.url));
-const modelPath = fileURLToPath(new URL('./vectors.txt', import.meta.url));
+const corpusPath = path.resolve(process.cwd(), 'src/ejemplo/corpus.txt');
+const modelPath = path.resolve(process.cwd(), 'src/ejemplo/word2vec/vectors.txt');
 
 /**
  * Trains a Word2Vec model from the corpus.txt and saves it to vectors.txt
@@ -102,38 +100,29 @@ export async function evaluateCbow() {
 
             const vocab = model.getVectors().map(v => v.word);
 
-            console.log("\n--- Inferring context around 'sat on' ---");
+            console.log("\n--- Demostrando la pérdida de orden secuencial en CBOW ---");
+            console.log("Evaluaremos 'sat on' vs 'on sat'.");
+
             /*
-            Here's what mostSimilar does step by step:
+            En un modelo Continuous Bag-Of-Words (CBOW):
+            1. Se separan las palabras: ['sat', 'on'] -> vectores V(sat), V(on)
+            2. Se promedian los vectores: (V(sat) + V(on)) / 2 = V(context)
+            3. Se buscan las palabras más cercanas a ese vector promedio.
 
-                    Splits the input string into individual tokens (e.g. 'sat on' → ['sat', 'on'])
-                    Looks up the vector for each token in the model
-                    Averages the vectors of all valid tokens (words found in the vocabulary) into a single combined vector
-                    Finds nearest neighbors to that averaged vector across the whole vocabulary, returning words sorted by cosine similarity
-                    So model.mostSimilar('cat mat', vocab.length) is essentially asking: "what word lives closest to the midpoint between 'cat' and 'mat' in vector space?"
+            Como la suma y el promedio son operaciones conmutativas:
+            (V(sat) + V(on)) / 2 === (V(on) + V(sat)) / 2
 
-                    This is why the comment at the bottom of 
-
-                    evaluateMiddleWord()
-                    notes that order doesn't matter — 'cat mat' and 'mat cat' produce the exact same averaged vector, and therefore the exact same results.
+            Esto significa que 'sat on' arroja EXACTAMENTE el mismo resultado que 'on sat'.
+            ¡El modelo pierde por completo el contexto del orden de las palabras!
             */
 
-            const satOn = model.mostSimilar('sat on', vocab.length) as { word: string, dist: number }[];
-            if (satOn && satOn.length > 0) {
-                const probabilities = softmax(satOn.map(n => n.dist));
-                satOn.forEach((n, i) => {
-                    console.log(`${n.word}: Similarity ${n.dist.toFixed(4)} | Probability ${(probabilities[i] * 100).toFixed(2)}%`);
-                });
-            }
+            console.log("\n--- Contexto para 'sat on' ---");
+            const satOn = model.mostSimilar('sat on', 3) as { word: string, dist: number }[];
+            satOn?.forEach(n => console.log(`${n.word}: ${n.dist.toFixed(4)}`));
 
-            console.log("\n--- Inferring context around 'ran to' ---");
-            const ranTo = model.mostSimilar('ran to', vocab.length) as { word: string, dist: number }[];
-            if (ranTo && ranTo.length > 0) {
-                const probabilities = softmax(ranTo.map(n => n.dist));
-                ranTo.forEach((n, i) => {
-                    console.log(`${n.word}: Similarity ${n.dist.toFixed(4)} | Probability ${(probabilities[i] * 100).toFixed(2)}%`);
-                });
-            }
+            console.log("\n--- Contexto para 'on sat' ---");
+            const onSat = model.mostSimilar('on sat', 3) as { word: string, dist: number }[];
+            onSat?.forEach(n => console.log(`${n.word}: ${n.dist.toFixed(4)}`));
 
             resolve();
         });
@@ -154,6 +143,7 @@ export async function main() {
             console.warn("Skipping training on Windows (requires Make/GCC). Using pre-existing vectors.txt...");
         }
         await evaluate();
+        await evaluateCbow();
     } catch (error) {
         console.error("Execution failed:", error);
         process.exit(1);
@@ -161,6 +151,6 @@ export async function main() {
 }
 
 // Automatically run main if this file is executed directly 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && process.argv[1].endsWith('index.ts')) {
     main();
 }
