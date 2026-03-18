@@ -2,9 +2,10 @@ import w2v from 'word2vec';
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 
-const corpusPath = new URL('../corpus.txt', import.meta.url).pathname;
-const modelPath = new URL('./vectors.txt', import.meta.url).pathname;
+const corpusPath = fileURLToPath(new URL('../corpus.txt', import.meta.url));
+const modelPath = fileURLToPath(new URL('./vectors.txt', import.meta.url));
 
 /**
  * Trains a Word2Vec model from the corpus.txt and saves it to vectors.txt
@@ -143,7 +144,15 @@ export async function evaluateCbow() {
 
 export async function main() {
     try {
-        await train();
+        if (os.platform() !== 'win32') {
+            try {
+                await train();
+            } catch (trainError: any) {
+                console.warn("Training failed:", trainError?.message || trainError);
+            }
+        } else {
+            console.warn("Skipping training on Windows (requires Make/GCC). Using pre-existing vectors.txt...");
+        }
         await evaluate();
     } catch (error) {
         console.error("Execution failed:", error);
@@ -152,6 +161,6 @@ export async function main() {
 }
 
 // Automatically run main if this file is executed directly 
-if (process.argv[1] === new URL(import.meta.url).pathname) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
     main();
 }
