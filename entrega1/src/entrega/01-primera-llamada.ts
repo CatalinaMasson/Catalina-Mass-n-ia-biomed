@@ -41,7 +41,7 @@ async function parteA() {
   console.log("=== PARTE A: Llamada Básica ===\n");
 
   // Usamos el modelo Gemini 1.5 Flash (gratuito, rápido)
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
   // Un prompt simple
   const prompt = "¿Qué es la hemoglobina y cuál es su función principal?";
@@ -67,7 +67,7 @@ async function parteB() {
 
   // El "system instruction" le da contexto/rol al modelo ANTES del prompt
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     systemInstruction:
       "Sos un médico clínico explicando resultados de laboratorio a un paciente. " +
       "Usá lenguaje simple, evitá jerga técnica innecesaria. " +
@@ -96,14 +96,18 @@ async function parteC() {
   // TODO 2: Creá un model con un systemInstruction que defina un rol biomédico.
   //         Ejemplos: patólogo, radiólogo, bioinformático, farmacólogo...
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    // TODO: Agregá un systemInstruction aquí
+    model: "gemini-2.5-flash",
+    systemInstruction:
+      "Sos un radiólogo explicando imágenes a un paciente. " +
+      "Usá lenguaje simple, evitá jerga técnica innecesaria. " +
+      "Si no estás seguro de algo, decilo claramente. " +
+      "Sé claro.",
   });
 
   // TODO 3: Escribí un prompt relacionado a biomedicina.
   //         Puede ser sobre un diagnóstico, un resultado de laboratorio,
   //         una interacción farmacológica, interpretación de imágenes, etc.
-  const prompt = ""; // <-- Tu prompt aquí
+  const prompt = "Tengo un nódulo pulmonar de 2cm en la radiografía de tórax. ¿Qué significa?"; // <-- Tu prompt aquí
 
   if (!prompt) {
     console.log("⚠️  Completá el TODO 2 y 3 antes de correr esta parte.\n");

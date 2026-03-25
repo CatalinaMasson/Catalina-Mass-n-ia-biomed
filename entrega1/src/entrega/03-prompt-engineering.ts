@@ -36,7 +36,7 @@ async function llamar(
   systemInstruction?: string
 ) {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     systemInstruction,
     generationConfig: { temperature: 0.3 }, // Baja para comparar mejor
   });
@@ -200,8 +200,37 @@ async function parteE() {
   // BONUS: ¿Podés hacer que el modelo detecte si le falta información
   //        y la pida explícitamente en vez de inventarla?
 
-  const miSystemInstruction = ""; // <-- TODO: Tu system instruction
-  const miPrompt = ""; // <-- TODO: Tu prompt
+  const miSystemInstruction = `Sos un hematólogo con 20 años de experiencia en un hospital.` +
+    `Usa terminología médica precisa` +
+    `No inventes información` +
+    `Si falta información, pedila explícitamente`; // <-- TODO: Tu system instruction
+  const miPrompt = `Analizá el siguiente caso clínico paso a paso.
+
+INSTRUCCIONES - Seguí este proceso de razonamiento:
+1. Primero, identificá los hallazgos ANORMALES del laboratorio
+2. Luego, buscá patrones: ¿qué combinación de anormales apunta a qué?
+3. Considerá los antecedentes del paciente y cómo se relacionan
+4. Proponé un diagnóstico principal con justificación, respondiendo con el formato exacto que se muestra en los ejemplos.
+
+EJEMPLO 1:
+Caso: Hombre 65 años, poliuria, polidipsia, pérdida de peso, glucemia 280 mg/dL
+Diagnóstico: Diabetes mellitus tipo 2
+Evidencia clave: Glucemia elevada + síntomas cardinales (poliuria, polidipsia)
+Confianza: ALTA
+Siguiente paso: HbA1c, perfil lipídico, función renal
+
+EJEMPLO 2:
+Caso: Mujer 30 años, palpitaciones, temblor, pérdida de peso, TSH 0.01, T4L 4.8
+Diagnóstico: Hipertiroidismo (probable enfermedad de Graves)
+Evidencia clave: TSH suprimida + T4 libre elevada + síntomas hipermetabólicos
+Confianza: ALTA
+Siguiente paso: Anticuerpos anti-receptor de TSH, ecografía tiroidea
+
+
+CASO:
+${CASO_CLINICO}
+
+Pensá paso a paso:`; // <-- TODO: Tu prompt
 
   if (!miPrompt) {
     console.log("\n⚠️  Completá el TODO 2 para correr esta parte.\n");
